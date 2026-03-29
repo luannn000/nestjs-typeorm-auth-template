@@ -1,0 +1,26 @@
+<head>
+  <link rel="stylesheet" href="../global.css" />
+  <link rel="stylesheet" href="../styles/email-verify.style.css" />
+</head>
+<body>
+  <div class="container">
+    {{> header.component}}
+    <h1>Email Verification</h1>
+    <p>
+      Click on this link to verify your email address:
+      <a href="{{verifyUrl}}">Verify Email</a>
+    </p>
+  </div>
+</body>
+
+<style>
+  .container {
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+</style>
