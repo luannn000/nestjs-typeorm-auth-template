@@ -19,10 +19,11 @@ import { join } from 'path';
           },
         },
         defaults: {
-          from: '"No Reply" <noreply@example.com>',
+          from:
+            '"No Reply" ' + config.getOrThrow<string>('NODEMAILER_AUTH_USER'),
         },
         template: {
-          dir: join(__dirname, 'templates/pages'),
+          dir: join(process.cwd(), 'src/commom/templates/pages'),
           adapter: new HandlebarsAdapter(),
           options: {
             strict: true,

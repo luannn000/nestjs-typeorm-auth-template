@@ -4,8 +4,8 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinTable,
   ManyToMany,
-  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -26,15 +26,19 @@ export class User {
   password: string;
 
   @Column({ default: false })
+  @Exclude()
   isEmailVerified: boolean;
 
-  @Column({ nullable: true })
-  verificationToken: string;
+  @Column({ type: 'text', nullable: true })
+  @Exclude()
+  verificationToken: string | null;
 
-  @Column({ nullable: true })
-  emailVerificationExpiry: Date;
+  @Column({ type: 'timestamp', nullable: true })
+  @Exclude()
+  emailVerificationExpiry: Date | null;
 
   @ManyToMany(() => Role, (role) => role.users)
+  @JoinTable()
   roles: Role[];
 
   @Column({ default: true })

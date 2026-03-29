@@ -16,7 +16,6 @@ export class Role {
   @Column({ unique: true })
   name: string;
 
-  @Column()
   @ManyToMany(() => User, (user) => user.roles)
   users: User[];
 

@@ -1,11 +1,12 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { join } from 'path';
 import * as fs from 'fs';
+import * as Handlebars from 'handlebars';
 
 @Injectable()
 export class EmailService implements OnModuleInit {
   onModuleInit() {
-    const partialsDir = join(__dirname, 'templates/components');
+    const partialsDir = join(process.cwd(), 'src/commom/templates/components');
     const filenames = fs.readdirSync(partialsDir);
 
     filenames.forEach((filename) => {

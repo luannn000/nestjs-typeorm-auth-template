@@ -1,28 +1,48 @@
 import { MailerService } from '@nestjs-modules/mailer';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { join } from 'path';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from 'src/user/entities/user.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class MailService {
   constructor(
+    @InjectRepository(User) private readonly userRepository: Repository<User>,
     private readonly config: ConfigService,
     private readonly mailer: MailerService,
   ) {}
 
   async sendVerificationEmail(to: string, token: string) {
-    const verificationLink = join(
-      this.config.getOrThrow<string>('FRONTEND_URL'),
-      'verify-email',
-      token,
-    );
+    const verifyEmailUrl = this.config.getOrThrow<string>('VERIFY_EMAIL_URL');
+    const verificationLink = `${verifyEmailUrl}/${token}`;
     await this.mailer.sendMail({
       to,
       subject: 'Email Verification',
-      template: './email-verify.page',
+      template: 'email-verify.page.hbs',
       context: {
         verifyUrl: verificationLink,
       },
     });
+  }
+
+  async verifyEmail(token: string) {
+    const user = await this.userRepository.findOne({
+      where: { verificationToken: token },
+    });
+    if (!user) throw new BadRequestException('Invalid verification token');
+
+    if (
+      !user.emailVerificationExpiry ||
+      user.emailVerificationExpiry < new Date()
+    )
+      throw new BadRequestException('Verification token has expired');
+
+    user.isEmailVerified = true;
+    user.verificationToken = null;
+    user.emailVerificationExpiry = null;
+    await this.userRepository.save(user);
+
+    return { message: 'Email verification successful' };
   }
 }
