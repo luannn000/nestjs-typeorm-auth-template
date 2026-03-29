@@ -28,6 +28,12 @@ export class User {
   @Column({ default: false })
   isEmailVerified: boolean;
 
+  @Column({ nullable: true })
+  verificationToken: string;
+
+  @Column({ nullable: true })
+  emailVerificationExpiry: Date;
+
   @ManyToMany(() => Role, (role) => role.users)
   roles: Role[];
 

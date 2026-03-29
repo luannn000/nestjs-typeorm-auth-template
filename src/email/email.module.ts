@@ -32,6 +32,6 @@ import { join } from 'path';
     }),
   ],
   providers: [EmailService],
-  exports: [EmailService],
+  exports: [MailerModule, EmailService],
 })
 export class EmailModule {}

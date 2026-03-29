@@ -11,6 +11,7 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { Roles } from 'src/commom/enums/roles.enum';
 import { EncryptionService } from 'src/encryption/encryption.service';
+import { MailService } from './mail/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -18,6 +19,7 @@ export class AuthService {
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Role) private readonly roleRepository: Repository<Role>,
     private readonly encryptionService: EncryptionService,
+    private readonly mailService: MailService,
   ) {}
 
   async login(dto: LoginDto) {}
@@ -38,11 +40,20 @@ export class AuthService {
       dto.password,
     );
 
+    const token = this.encryptionService.generateVerificationToken();
+    const tokenExpiryDate = new Date(60 * 60 * 1000 + Date.now());
+
     const newUser = this.userRepository.create();
     newUser.username = dto.username;
     newUser.email = dto.email;
     newUser.password = hashedPassword;
+    newUser.verificationToken = token.hashedToken;
+    newUser.emailVerificationExpiry = tokenExpiryDate;
     newUser.roles = [userRole];
     await this.userRepository.save(newUser);
+
+    this.mailService.sendVerificationEmail(newUser.email, token.rawToken);
+
+    return { message: 'Registration successful, please verify your email' };
   }
 }

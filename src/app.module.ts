@@ -6,7 +6,6 @@ import { RolesModule } from './roles/roles.module';
 import { UserModule } from './user/user.module';
 import { EmailModule } from './email/email.module';
 import { EncryptionModule } from './encryption/encryption.module';
-import { JwtModule } from './jwt/jwt.module';
 
 @Module({
   imports: [
@@ -22,7 +21,7 @@ import { JwtModule } from './jwt/jwt.module';
         username: config.getOrThrow<string>('DATABASE_USERNAME'),
         password: config.getOrThrow<string>('DATABASE_PASSWORD'),
         database: config.getOrThrow<string>('DATABASE_DATABASE'),
-        entities: [`${__dirname}/../**/**.entity{.ts,.js}`],
+        entities: [`${__dirname}/../**/*.entity{.ts,.js}`],
         autoLoadEntities: true,
       }),
     }),
@@ -31,7 +30,6 @@ import { JwtModule } from './jwt/jwt.module';
     RolesModule,
     EmailModule,
     EncryptionModule,
-    JwtModule,
   ],
 })
 export class AppModule {}
