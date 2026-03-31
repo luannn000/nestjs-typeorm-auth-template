@@ -1,17 +1,23 @@
 import { MailerService } from '@nestjs-modules/mailer';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EncryptionService } from 'src/encryption/encryption.service';
 import { User } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
+import { PasswordService } from '../password/password.service';
 
 @Injectable()
 export class MailService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     private readonly config: ConfigService,
-    private readonly encryptionService: EncryptionService,
+    @Inject(forwardRef(() => PasswordService))
+    private readonly passwordService: PasswordService,
     private readonly mailer: MailerService,
   ) {}
 
@@ -29,7 +35,7 @@ export class MailService {
   }
 
   async verifyEmail(token: string) {
-    const hashedToken = this.encryptionService.hashToken(token);
+    const hashedToken = this.passwordService.hashToken(token);
 
     const user = await this.userRepository.findOne({
       where: { verificationToken: hashedToken },
@@ -48,5 +54,19 @@ export class MailService {
     await this.userRepository.save(user);
 
     return { message: 'Email verification successful' };
+  }
+
+  async sendResetPasswordEmail(to: string, token: string) {
+    const resetPasswordUrl =
+      this.config.getOrThrow<string>('RESET_PASSWORD_URL');
+    const resetLink = `${resetPasswordUrl}/${token}`;
+    await this.mailer.sendMail({
+      to,
+      subject: 'Password Reset',
+      template: 'password-reset.page.hbs',
+      context: {
+        resetLink,
+      },
+    });
   }
 }

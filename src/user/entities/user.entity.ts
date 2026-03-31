@@ -41,6 +41,14 @@ export class User {
   @Exclude()
   emailVerificationExpiry: Date | null;
 
+  @Column({ type: 'text', nullable: true })
+  @Exclude()
+  passwordResetToken: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  @Exclude()
+  passwordResetExpiry: Date | null;
+
   @ManyToMany(() => Role, (role) => role.users)
   @JoinTable()
   roles: Role[];

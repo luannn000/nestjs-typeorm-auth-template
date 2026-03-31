@@ -1,12 +1,12 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MailService } from './mail.service';
 import { MailController } from './mail.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
-import { EncryptionModule } from 'src/encryption/encryption.module';
+import { PasswordModule } from '../password/password.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User]), EncryptionModule],
+  imports: [TypeOrmModule.forFeature([User]), forwardRef(() => PasswordModule)],
   controllers: [MailController],
   providers: [MailService],
   exports: [MailService],

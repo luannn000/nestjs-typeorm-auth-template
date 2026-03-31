@@ -5,7 +5,6 @@ import { PasswordModule } from './password/password.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { Role } from 'src/roles/entities/role.entity';
-import { EncryptionModule } from 'src/encryption/encryption.module';
 import { MailModule } from './mail/mail.module';
 import { JwtModule } from '@nestjs/jwt';
 import { Auth } from './auth';
@@ -15,7 +14,6 @@ import { JwtStrategy } from './jwt.strategy';
   imports: [
     JwtModule,
     TypeOrmModule.forFeature([User, Role]),
-    EncryptionModule,
     MailModule,
     PasswordModule,
   ],

@@ -10,18 +10,18 @@ import { Repository } from 'typeorm';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { Roles } from 'src/commom/enums/roles.enum';
-import { EncryptionService } from 'src/encryption/encryption.service';
 import { MailService } from './mail/mail.service';
 import { Request, Response } from 'express';
 import { Auth } from './auth';
+import { PasswordService } from './password/password.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Role) private readonly roleRepository: Repository<Role>,
-    private readonly encryptionService: EncryptionService,
     private readonly mailService: MailService,
+    private readonly passwordService: PasswordService,
     private readonly auth: Auth,
   ) {}
 
@@ -32,7 +32,7 @@ export class AuthService {
     });
     if (!user) throw new BadRequestException('Invalid credentials');
 
-    const passwordMatch = await this.encryptionService.verifyPassword(
+    const passwordMatch = await this.passwordService.verifyPassword(
       user.password,
       dto.password,
     );
@@ -62,11 +62,11 @@ export class AuthService {
     if (!userRole)
       throw new InternalServerErrorException('Default role not found');
 
-    const hashedPassword = await this.encryptionService.hashPassword(
+    const hashedPassword = await this.passwordService.hashPassword(
       dto.password,
     );
 
-    const token = this.encryptionService.generateVerificationToken();
+    const token = this.passwordService.generateVerificationToken();
     const tokenExpiryDate = new Date(60 * 60 * 1000 + Date.now());
 
     const newUser = this.userRepository.create();
