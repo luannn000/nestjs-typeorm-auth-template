@@ -33,8 +33,6 @@ export class Auth {
     const refreshToken = await this.jwtService.signAsync(
       {
         id: user.id,
-        email: user.email,
-        roles: user.roles.map((role) => role.name),
       },
       {
         secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
