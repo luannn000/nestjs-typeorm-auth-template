@@ -14,7 +14,7 @@ export class Auth {
   async createAccessToken(user: User) {
     const accessToken = await this.jwtService.signAsync(
       {
-        id: user.id,
+        sub: user.id,
         email: user.email,
         roles: user.roles.map((role) => role.name),
       },
@@ -32,7 +32,7 @@ export class Auth {
   async createRefreshToken(user: User, res: Response) {
     const refreshToken = await this.jwtService.signAsync(
       {
-        id: user.id,
+        sub: user.id,
       },
       {
         secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),

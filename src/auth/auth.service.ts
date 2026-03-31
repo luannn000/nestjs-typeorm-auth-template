@@ -13,9 +13,6 @@ import { Roles } from 'src/commom/enums/roles.enum';
 import { EncryptionService } from 'src/encryption/encryption.service';
 import { MailService } from './mail/mail.service';
 import { Request, Response } from 'express';
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-import { ref } from 'process';
 import { Auth } from './auth';
 
 @Injectable()
@@ -86,7 +83,7 @@ export class AuthService {
     return { message: 'Registration successful, please verify your email' };
   }
 
-  async refresh(req: Request, response: Response) {
+  async refresh(req: Request, res: Response) {
     const refreshToken = req.cookies['refreshToken'];
     if (!refreshToken) throw new BadRequestException('Refresh token missing');
 
@@ -103,7 +100,7 @@ export class AuthService {
     }
 
     const accessToken = await this.auth.createAccessToken(user);
-    const newRefreshToken = await this.auth.createRefreshToken(user, response);
+    const newRefreshToken = await this.auth.createRefreshToken(user, res);
 
     user.refreshToken = newRefreshToken;
     await this.userRepository.save(user);
