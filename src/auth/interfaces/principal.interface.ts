@@ -1,5 +1,5 @@
 export interface PrincipalType {
-  sub: number;
+  sub: string;
   email: string;
   roles: string[];
 }
