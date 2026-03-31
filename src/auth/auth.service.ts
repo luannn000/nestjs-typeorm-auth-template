@@ -2,7 +2,6 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
-  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from 'src/roles/entities/role.entity';
@@ -13,6 +12,11 @@ import { RegisterDto } from './dto/register.dto';
 import { Roles } from 'src/commom/enums/roles.enum';
 import { EncryptionService } from 'src/encryption/encryption.service';
 import { MailService } from './mail/mail.service';
+import { Request, Response } from 'express';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { ref } from 'process';
+import { Auth } from './auth';
 
 @Injectable()
 export class AuthService {
@@ -21,9 +25,33 @@ export class AuthService {
     @InjectRepository(Role) private readonly roleRepository: Repository<Role>,
     private readonly encryptionService: EncryptionService,
     private readonly mailService: MailService,
+    private readonly auth: Auth,
   ) {}
 
-  async login(dto: LoginDto) {}
+  async login(res: Response, dto: LoginDto) {
+    const user = await this.userRepository.findOne({
+      where: { email: dto.email },
+      relations: ['roles'],
+    });
+    if (!user) throw new BadRequestException('Invalid credentials');
+
+    const passwordMatch = await this.encryptionService.verifyPassword(
+      user.password,
+      dto.password,
+    );
+    if (!passwordMatch) throw new BadRequestException('Invalid credentials');
+
+    if (!user.isEmailVerified)
+      throw new BadRequestException('Email not verified');
+
+    const accessToken = await this.auth.createAccessToken(user);
+    const refreshToken = await this.auth.createRefreshToken(user, res);
+
+    user.refreshToken = refreshToken;
+    await this.userRepository.save(user);
+
+    return { accessToken };
+  }
 
   async register(dto: RegisterDto) {
     const foundUser = await this.userRepository.findOne({
@@ -56,5 +84,51 @@ export class AuthService {
     this.mailService.sendVerificationEmail(newUser.email, token.rawToken);
 
     return { message: 'Registration successful, please verify your email' };
+  }
+
+  async refresh(req: Request, response: Response) {
+    const refreshToken = req.cookies['refreshToken'];
+    if (!refreshToken) throw new BadRequestException('Refresh token missing');
+
+    const user = await this.userRepository.findOne({
+      where: { refreshToken },
+      relations: ['roles'],
+    });
+    if (!user) throw new BadRequestException('Invalid refresh token');
+
+    if (!(await this.auth.verifyToken(refreshToken))) {
+      user.refreshToken = null;
+      await this.userRepository.save(user);
+      throw new BadRequestException('Invalid refresh token');
+    }
+
+    const accessToken = await this.auth.createAccessToken(user);
+    const newRefreshToken = await this.auth.createRefreshToken(user, response);
+
+    user.refreshToken = newRefreshToken;
+    await this.userRepository.save(user);
+
+    return { accessToken };
+  }
+
+  async logout(req: Request, res: Response) {
+    const refreshToken = req.cookies['refreshToken'];
+    if (!refreshToken) throw new BadRequestException('Refresh token missing');
+
+    const user = await this.userRepository.findOne({
+      where: { refreshToken },
+    });
+    if (!user) throw new BadRequestException('Invalid refresh token');
+
+    user.refreshToken = null;
+    await this.userRepository.save(user);
+
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+    });
+
+    return { message: 'Logged out successfully' };
   }
 }

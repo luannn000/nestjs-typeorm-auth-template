@@ -31,6 +31,10 @@ export class User {
 
   @Column({ type: 'text', nullable: true })
   @Exclude()
+  refreshToken: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  @Exclude()
   verificationToken: string | null;
 
   @Column({ type: 'timestamp', nullable: true })

@@ -2,6 +2,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
+import { EncryptionService } from 'src/encryption/encryption.service';
 import { User } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
 
@@ -10,6 +11,7 @@ export class MailService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     private readonly config: ConfigService,
+    private readonly encryptionService: EncryptionService,
     private readonly mailer: MailerService,
   ) {}
 
@@ -27,8 +29,10 @@ export class MailService {
   }
 
   async verifyEmail(token: string) {
+    const hashedToken = this.encryptionService.hashToken(token);
+
     const user = await this.userRepository.findOne({
-      where: { verificationToken: token },
+      where: { verificationToken: hashedToken },
     });
     if (!user) throw new BadRequestException('Invalid verification token');
 

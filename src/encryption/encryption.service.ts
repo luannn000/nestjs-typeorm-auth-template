@@ -14,6 +14,10 @@ export class EncryptionService {
     return hashedPassword;
   }
 
+  async verifyPassword(hashedPassword: string, plainPassword: string) {
+    return await argon2.verify(hashedPassword, plainPassword);
+  }
+
   generateVerificationToken() {
     const rawToken = crypto.randomBytes(32).toString('hex');
     const hashedToken = crypto

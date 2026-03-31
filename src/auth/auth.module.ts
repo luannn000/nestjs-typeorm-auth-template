@@ -7,15 +7,18 @@ import { User } from 'src/user/entities/user.entity';
 import { Role } from 'src/roles/entities/role.entity';
 import { EncryptionModule } from 'src/encryption/encryption.module';
 import { MailModule } from './mail/mail.module';
+import { JwtModule } from '@nestjs/jwt';
+import { Auth } from './auth';
 
 @Module({
   imports: [
+    JwtModule,
     TypeOrmModule.forFeature([User, Role]),
     EncryptionModule,
     MailModule,
     PasswordModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService, Auth],
 })
 export class AuthModule {}
