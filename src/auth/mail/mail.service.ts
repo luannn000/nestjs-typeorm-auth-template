@@ -21,6 +21,25 @@ export class MailService {
     private readonly mailer: MailerService,
   ) {}
 
+  async resendVerificationEmail(email: string) {
+    const user = await this.userRepository.findOne({
+      where: { email },
+    });
+    if (!user) throw new BadRequestException('User not found');
+
+    if (user.isEmailVerified)
+      throw new BadRequestException('Email already verified');
+
+    const { hashedToken } = this.passwordService.generateVerificationToken();
+    user.verificationToken = hashedToken;
+    user.emailVerificationExpiry = new Date(Date.now() + 60 * 60 * 1000);
+    await this.userRepository.save(user);
+
+    await this.sendVerificationEmail(email, hashedToken);
+
+    return { message: 'Verification email resent successfully' };
+  }
+
   async sendVerificationEmail(to: string, token: string) {
     const verifyEmailUrl = this.config.getOrThrow<string>('VERIFY_EMAIL_URL');
     const verificationLink = `${verifyEmailUrl}/${token}`;
