@@ -1,7 +1,7 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { PasswordService } from './password.service';
 
-@Controller('password')
+@Controller('auth/password')
 export class PasswordController {
   constructor(private readonly passwordService: PasswordService) {}
 

@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { MailService } from './mail.service';
 
-@Controller('mail')
+@Controller('auth/mail')
 export class MailController {
   constructor(private readonly mailService: MailService) {}
 
