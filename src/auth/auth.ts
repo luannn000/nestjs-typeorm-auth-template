@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
 import { User } from 'src/user/entities/user.entity';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class Auth {

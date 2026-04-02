@@ -12,6 +12,7 @@ export const typeOrmModuleConfig: TypeOrmModuleAsyncOptions = {
     database: config.getOrThrow<string>('DATABASE_DATABASE'),
     entities: [__dirname + '/**/*.entity{.ts,.js}'],
     autoLoadEntities: true,
+    // TODO: REMOVE SYNCHRONIZE IN PRODUCTION
     synchronize: true,
   }),
 };
