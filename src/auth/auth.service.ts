@@ -14,6 +14,7 @@ import { MailService } from './mail/mail.service';
 import { Request, Response } from 'express';
 import { Auth } from './auth';
 import { PasswordService } from './password/password.service';
+import { Password } from './password/password';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +23,7 @@ export class AuthService {
     @InjectRepository(Role) private readonly roleRepository: Repository<Role>,
     private readonly mailService: MailService,
     private readonly passwordService: PasswordService,
+    private readonly password: Password,
     private readonly auth: Auth,
   ) {}
 
@@ -30,9 +32,10 @@ export class AuthService {
       where: { email: dto.email },
       relations: ['roles'],
     });
-    if (!user) throw new BadRequestException('Invalid credentials');
+    if (!user || !user.isActive)
+      throw new BadRequestException('Invalid credentials');
 
-    const passwordMatch = await this.passwordService.verifyPassword(
+    const passwordMatch = await this.password.verifyPassword(
       user.password,
       dto.password,
     );
@@ -54,7 +57,16 @@ export class AuthService {
     const foundUser = await this.userRepository.findOne({
       where: { email: dto.email },
     });
-    if (foundUser) throw new BadRequestException('Email already in use');
+    if (foundUser && foundUser.isActive)
+      throw new BadRequestException('Email already in use');
+
+    if (foundUser && !foundUser.isActive) {
+      foundUser.username = dto.username;
+      foundUser.password = await this.password.hashPassword(dto.password);
+      foundUser.isActive = true;
+      await this.userRepository.save(foundUser);
+      return { message: 'User reactivated successfully' };
+    }
 
     const userRole = await this.roleRepository.findOne({
       where: { name: Roles.FREE },
@@ -62,9 +74,7 @@ export class AuthService {
     if (!userRole)
       throw new InternalServerErrorException('Default role not found');
 
-    const hashedPassword = await this.passwordService.hashPassword(
-      dto.password,
-    );
+    const hashedPassword = await this.password.hashPassword(dto.password);
 
     const token = this.passwordService.generateVerificationToken();
     const tokenExpiryDate = new Date(60 * 60 * 1000 + Date.now());

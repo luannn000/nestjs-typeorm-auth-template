@@ -11,6 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
+import { Password } from './password';
 
 @Injectable()
 export class PasswordService {
@@ -18,7 +19,7 @@ export class PasswordService {
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @Inject(forwardRef(() => MailService))
     private readonly mailService: MailService,
-    private readonly config: ConfigService,
+    private readonly password: Password,
   ) {}
 
   async forgotPassword(email: string) {
@@ -44,24 +45,13 @@ export class PasswordService {
     if (user.passwordResetExpiry && user.passwordResetExpiry < new Date())
       throw new BadRequestException('Password reset token has expired');
 
-    user.password = await this.hashPassword(newPassword);
+    user.password = await this.password.hashPassword(newPassword);
     user.passwordResetToken = null;
     user.passwordResetExpiry = null;
 
     await this.userRepository.save(user);
 
     return { message: 'Password reset successfully' };
-  }
-
-  hashPassword(password: string) {
-    const salt = this.config.getOrThrow<string>('ARGON_SALT');
-    const hashedPassword = argon2.hash(password, { salt: Buffer.from(salt) });
-
-    return hashedPassword;
-  }
-
-  async verifyPassword(hashedPassword: string, plainPassword: string) {
-    return await argon2.verify(hashedPassword, plainPassword);
   }
 
   generateVerificationToken() {
