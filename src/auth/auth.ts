@@ -52,15 +52,4 @@ export class Auth {
 
     return refreshToken;
   }
-
-  async verifyToken(refreshToken: string) {
-    try {
-      this.jwtService.verify(refreshToken, {
-        secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
-      });
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }
 }

@@ -46,8 +46,9 @@ export class AuthService {
 
     const accessToken = await this.auth.createAccessToken(user);
     const refreshToken = await this.auth.createRefreshToken(user, res);
+    const hashedRefreshToken = await this.password.hashPassword(refreshToken);
 
-    user.refreshToken = refreshToken;
+    user.refreshToken = hashedRefreshToken;
     await this.userRepository.save(user);
 
     return { accessToken };
@@ -97,22 +98,20 @@ export class AuthService {
     const refreshToken = req.cookies['refreshToken'];
     if (!refreshToken) throw new BadRequestException('Refresh token missing');
 
+    const hashedToken = await this.password.hashPassword(refreshToken);
+
     const user = await this.userRepository.findOne({
-      where: { refreshToken },
+      where: { refreshToken: hashedToken },
       relations: ['roles'],
     });
     if (!user) throw new BadRequestException('Invalid refresh token');
 
-    if (!(await this.auth.verifyToken(refreshToken))) {
-      user.refreshToken = null;
-      await this.userRepository.save(user);
-      throw new BadRequestException('Invalid refresh token');
-    }
-
     const accessToken = await this.auth.createAccessToken(user);
     const newRefreshToken = await this.auth.createRefreshToken(user, res);
 
-    user.refreshToken = newRefreshToken;
+    const hashedNewRefreshToken = await this.password.hashPassword(newRefreshToken);
+
+    user.refreshToken = hashedNewRefreshToken;
     await this.userRepository.save(user);
 
     return { accessToken };
@@ -122,8 +121,10 @@ export class AuthService {
     const refreshToken = req.cookies['refreshToken'];
     if (!refreshToken) throw new BadRequestException('Refresh token missing');
 
+    const hashedToken = await this.password.hashPassword(refreshToken);
+
     const user = await this.userRepository.findOne({
-      where: { refreshToken },
+      where: { refreshToken: hashedToken },
     });
     if (!user) throw new BadRequestException('Invalid refresh token');
 
