@@ -47,7 +47,7 @@ export class Auth {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: this.configService.getOrThrow<number>('JWT_REFRESH_EXPIRES_IN'),
+      maxAge: this.configService.getOrThrow<number>('JWT_REFRESH_EXPIRES_IN') * 1000,
     });
 
     return refreshToken;
