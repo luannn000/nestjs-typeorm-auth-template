@@ -21,8 +21,8 @@ export class Auth {
       },
       {
         secret: this.configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
-        expiresIn: this.configService.getOrThrow<number>(
-          'JWT_ACCESS_EXPIRES_IN',
+        expiresIn: parseInt(
+          this.configService.getOrThrow<string>('JWT_ACCESS_EXPIRES_IN'),
         ),
       },
     );
@@ -37,8 +37,8 @@ export class Auth {
       },
       {
         secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
-        expiresIn: this.configService.getOrThrow<number>(
-          'JWT_REFRESH_EXPIRES_IN',
+        expiresIn: parseInt(
+          this.configService.getOrThrow<string>('JWT_REFRESH_EXPIRES_IN'),
         ),
       },
     );
@@ -47,7 +47,8 @@ export class Auth {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: this.configService.getOrThrow<number>('JWT_REFRESH_EXPIRES_IN') * 1000,
+      maxAge:
+        this.configService.getOrThrow<number>('JWT_REFRESH_EXPIRES_IN') * 1000,
     });
 
     return refreshToken;
