@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Post, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -11,9 +11,12 @@ export class AuthController {
 
   @Post('login')
   @Throttle({ default: { limit: 5, ttl: 300_000 } })
-  async login(@Res() res: Response, @Body() body: LoginDto) {
+  async login(
+    @Res({ passthrough: true }) res: Response,
+    @Body() body: LoginDto,
+  ) {
     const data = await this.authService.login(res, body);
-    return res.json(data);
+    return data;
   }
 
   @Post('register')
@@ -23,14 +26,17 @@ export class AuthController {
   }
 
   @Post('refresh')
-  async refresh(@Req() req: Request, @Res() res: Response) {
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const data = await this.authService.refresh(req, res);
-    return res.json(data);
+    return data;
   }
 
   @Post('logout')
-  async logout(@Req() req: Request, @Res() res: Response) {
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const data = await this.authService.logout(req, res);
-    return res.json(data);
+    return data;
   }
 }

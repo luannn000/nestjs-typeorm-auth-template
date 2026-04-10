@@ -46,9 +46,8 @@ export class AuthService {
 
     const accessToken = await this.auth.createAccessToken(user);
     const refreshToken = await this.auth.createRefreshToken(user, res);
-    const hashedRefreshToken = await this.password.hashPassword(refreshToken);
 
-    user.refreshToken = hashedRefreshToken;
+    user.refreshToken = refreshToken;
     await this.userRepository.save(user);
 
     return { accessToken };
@@ -95,13 +94,11 @@ export class AuthService {
   }
 
   async refresh(req: Request, res: Response) {
-    const refreshToken = req.cookies['refreshToken'];
+    const refreshToken = req.cookies['refreshToken'] as string;
     if (!refreshToken) throw new BadRequestException('Refresh token missing');
 
-    const hashedToken = await this.password.hashPassword(refreshToken);
-
     const user = await this.userRepository.findOne({
-      where: { refreshToken: hashedToken },
+      where: { refreshToken: refreshToken },
       relations: ['roles'],
     });
     if (!user) throw new BadRequestException('Invalid refresh token');
@@ -109,16 +106,14 @@ export class AuthService {
     const accessToken = await this.auth.createAccessToken(user);
     const newRefreshToken = await this.auth.createRefreshToken(user, res);
 
-    const hashedNewRefreshToken = await this.password.hashPassword(newRefreshToken);
-
-    user.refreshToken = hashedNewRefreshToken;
+    user.refreshToken = newRefreshToken;
     await this.userRepository.save(user);
 
     return { accessToken };
   }
 
   async logout(req: Request, res: Response) {
-    const refreshToken = req.cookies['refreshToken'];
+    const refreshToken = req.cookies['refreshToken'] as string;
     if (!refreshToken) throw new BadRequestException('Refresh token missing');
 
     const hashedToken = await this.password.hashPassword(refreshToken);
